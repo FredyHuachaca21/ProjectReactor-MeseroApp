@@ -5,24 +5,25 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
-
-@Document(collection = "platos")
+@Document(collection = "usuarios")
 @Data
-public class Plato {
+public class Usuario {
 
     @Id
     private String id;
 
-    @Field(name = "nombre")
-    @NotEmpty
-    private String nombre;
+    @Field(name = "usuario")
+    private String usuario;
 
-    private Double precio;
+    @Field(name = "clave")
+    private String clave;
 
     @Field(name = "estado")
-    @NotNull
     private Boolean estado;
+
+    private List<Rol> roles;
+
+
 }

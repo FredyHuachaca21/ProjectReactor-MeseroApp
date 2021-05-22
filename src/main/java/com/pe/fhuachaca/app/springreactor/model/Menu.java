@@ -1,28 +1,26 @@
 package com.pe.fhuachaca.app.springreactor.model;
 
-import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
-
-@Document(collection = "platos")
-@Data
-public class Plato {
+@Document(collection = "menus")
+public class Menu {
 
     @Id
     private String id;
 
+    @Field(name = "icono")
+    private String icono;
+
     @Field(name = "nombre")
-    @NotEmpty
     private String nombre;
 
-    private Double precio;
+    @Field(name = "url")
+    private String url;
 
-    @Field(name = "estado")
-    @NotNull
-    private Boolean estado;
+    private List<String> roles;
+
 }

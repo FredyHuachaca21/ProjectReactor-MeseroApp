@@ -3,6 +3,9 @@ package com.pe.fhuachaca.app.springreactor.controller;
 import com.pe.fhuachaca.app.springreactor.model.Plato;
 import com.pe.fhuachaca.app.springreactor.service.IPlatoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Links;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +14,12 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.Valid;
 import java.net.URI;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static reactor.function.TupleUtils.function;
 
 @RestController
 @RequestMapping("/platos")
@@ -38,7 +46,7 @@ public class PlatoController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<Plato>> registrar(@RequestBody Plato plato, final ServerHttpRequest REQ) {
+    public Mono<ResponseEntity<Plato>> registrar(@Valid  @RequestBody Plato plato, final ServerHttpRequest REQ) {
         return service.registrar(plato)
                 .map(p -> ResponseEntity
                         .created(URI.create(REQ.getURI()
@@ -49,7 +57,7 @@ public class PlatoController {
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<Plato>> modificar(@RequestBody Plato plato, @PathVariable("id") String id) {
+    public Mono<ResponseEntity<Plato>> modificar(@Valid @RequestBody Plato plato, @PathVariable("id") String id) {
         Mono<Plato> monoPlato = Mono.just(plato);
         Mono<Plato> monoDB = service.listarPorId(id);
 
@@ -77,6 +85,42 @@ public class PlatoController {
                 })
                 .defaultIfEmpty(new ResponseEntity<Void>(HttpStatus.NOT_FOUND));
     }
+
+    private Plato platoHateoas;
+
+    @GetMapping("/hateoas/{id}")
+    public Mono<EntityModel<Plato>> listarHateoasPorId(@PathVariable("id") String id){
+        Mono<Link> link1 = Mono.just(linkTo(methodOn(PlatoController.class).listarPorId(id)).withSelfRel());
+        Mono<Link> link2 = Mono.just(linkTo(methodOn(PlatoController.class).listarPorId(id)).withSelfRel());
+
+        //PRACTICA NO RECOMENDADA
+        /*return service.listarPorId(id)
+                .flatMap(p -> {
+                    this.platoHateoas = p;
+                    return link1;
+                })
+                .map(link -> {
+                    return EntityModel.of(this.platoHateoas, link);
+                });*/
+
+        //PRACTICA INTERMEDIA
+        /*return service.listarPorId(id)
+                .flatMap(p->{
+                    return link1.map(link ->EntityModel.of(p, link));
+                });*/
+
+        //PRACTICA IDEAL
+        /*return service.listarPorId(id)
+                .zipWith(link1, (p, link)-> EntityModel.of(p, link));*/
+
+        //Mas de un Link
+        return link1.zipWith(link2)
+                .map(function((left, right)->Links.of(left, right)))
+                .zipWith(service.listarPorId(id), (link, p) -> EntityModel.of(p, link));
+
+    }
+
+
 
 
 }
